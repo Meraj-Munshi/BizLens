@@ -57,6 +57,10 @@ BizLens addresses this problem by combining operational data management with KPI
 - Light and dark themes
 - Multilingual interface support
 
+## Dashboard & Analytics
+
+![BizLens Dashboard Analytics](screenshots/Screenshot%202026-10-11%20100732.png)
+
 ## Business Analytics
 
 BizLens calculates business indicators from recorded operational data.

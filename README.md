@@ -59,7 +59,8 @@ BizLens addresses this problem by combining operational data management with KPI
 
 ## Dashboard & Analytics
 
-![BizLens Dashboard Analytics](screenshots/dashboard-analytics.png)
+![BizLens Dashboard Analytics](screenshots/dashboard-analytics.png) 
+![BizLens Dashboard Analytics](screenshots/dashboard-analytics1.png)
 
 ## Business Analytics
 

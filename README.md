@@ -62,7 +62,7 @@ BizLens addresses this problem by combining operational data management with KPI
 ![BizLens Dashboard Analytics](screenshots/dashboard-analytics.png) 
 ![BizLens Dashboard Analytics](screenshots/dashboard-analytics1.png)
 
-### Business Insights & Break-even Analysis
+## Business Insights & Break-even Analysis
 
 ![BizLens Alerts and Break-even Analysis](screenshots/Insight-keyobservation.png)
 ![BizLens Alerts and Break-even Analysis](screenshots/Insight-alert&breakeven.png)

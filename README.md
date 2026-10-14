@@ -1,4 +1,4 @@
-# BizLens — SMB Decision Support System
+# BizLens — SMB's Decision Support System
 
 **Turning everyday business data into actionable insights.**
 

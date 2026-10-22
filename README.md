@@ -6,7 +6,7 @@ BizLens is a full-stack business management and analytics platform designed for 
 
 **Project type:** B.Tech Computer Science Engineering Academic Project  
 **Role:** Project Lead  
-**Repository:** [TheWeaponizzer/BizLens](https://github.com/TheWeaponizzer/BizLens)
+**Repository:** [TheWeaponizzer/BizLens](https://github.com/Meraj-Munshi/BizLens)
 
 ---
 

@@ -153,7 +153,7 @@ Install the following before running the application:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/TheWeaponizzer/BizLens.git
+git clone https://github.com/Meraj-Munshi/BizLens.git
 cd BizLens
 ```
 

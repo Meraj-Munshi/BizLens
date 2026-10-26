@@ -33,91 +33,45 @@ const DEFAULT_CATS = [
 // ===============================
 
 r.post('/auth/signup', wrap(async (req, res) => {
-
-    const {
-        name,
-        email,
-        password,
-        business_name
-    } = req.body;
-
+    const { name, email, password, business_name } = req.body || {};
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanName = String(name || '').trim();
     const cleanBusiness = String(business_name || '').trim();
 
-    if (
-        !cleanName ||
-        !cleanEmail ||
-        !cleanBusiness ||
-        !password ||
-        password.length < 6
-    ) {
-        throw bad(
-            'Enter your name, email, business name and a password of at least 6 characters'
-        );
+    if (!cleanName || !cleanEmail || !cleanBusiness || typeof password !== 'string' || password.length < 8) {
+        throw bad('Enter your name, email, business name and a password of at least 8 characters');
     }
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
         throw bad('Enter a valid email address');
     }
 
-    const [ex] = await db.query(
-        'SELECT id FROM users WHERE email=?',
-        [cleanEmail]
-    );
-
-    if (ex.length) {
-        throw bad(
-            'An account with this email already exists',
-            409
+    const conn = await db.getConnection();
+    try {
+        await conn.beginTransaction();
+        const [existing] = await conn.query('SELECT id FROM users WHERE email=?', [cleanEmail]);
+        if (existing.length) throw bad('An account with this email already exists', 409);
+        const [userResult] = await conn.query(
+            'INSERT INTO users(name,email,password_hash) VALUES(?,?,?)',
+            [cleanName, cleanEmail, await bcrypt.hash(password, 12)]
         );
-    }
-
-    const u = await db.query(
-        'INSERT INTO users(name,email,password_hash) VALUES(?,?,?)',
-        [
-            cleanName,
-            cleanEmail,
-            await bcrypt.hash(password, 10)
-        ]
-    );
-
-    const b = await db.query(
-        'INSERT INTO businesses(user_id,business_name) VALUES(?,?)',
-        [
-            u[0].insertId,
-            cleanBusiness
-        ]
-    );
-
-    for (const c of DEFAULT_CATS) {
-        await db.query(
-            'INSERT INTO expense_categories(business_id,name) VALUES(?,?)',
-            [
-                b[0].insertId,
-                c
-            ]
+        const [businessResult] = await conn.query(
+            'INSERT INTO businesses(user_id,business_name) VALUES(?,?)',
+            [userResult.insertId, cleanBusiness]
         );
-    }
-
-    res.json({
-        token: jwt.sign(
-            {
-                uid: u[0].insertId,
-                bid: b[0].insertId
-            },
-            SECRET,
-            { expiresIn: '7d' }
-        ),
-
-        user: {
-            name: cleanName,
-            email: cleanEmail,
-            business_name: cleanBusiness,
-            profile_image: null
+        for (const category of DEFAULT_CATS) {
+            await conn.query('INSERT INTO expense_categories(business_id,name) VALUES(?,?)', [businessResult.insertId, category]);
         }
-    });
-
+        await conn.commit();
+        res.status(201).json({
+            token: jwt.sign({ uid: userResult.insertId, bid: businessResult.insertId }, SECRET, { expiresIn: '7d' }),
+            user: { name: cleanName, email: cleanEmail, business_name: cleanBusiness, profile_image: null }
+        });
+    } catch (error) {
+        await conn.rollback();
+        throw error;
+    } finally {
+        conn.release();
+    }
 }));
 
 

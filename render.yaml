@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm ci
-    startCommand: npm start
+    startCommand: npm run db && npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -21,3 +21,5 @@ services:
         sync: false
       - key: DB_NAME
         sync: false
+      - key: DB_SSL
+        value: 'false'

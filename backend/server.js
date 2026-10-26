@@ -5,6 +5,25 @@ const db = require('./db');
 const app = express();
 
 app.disable('x-powered-by');
+
+// Restrict browser access to the configured frontend and local development origins.
+const allowedOrigins = new Set([
+  'https://meraj-munshi.github.io',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  ...(process.env.FRONTEND_ORIGIN ? process.env.FRONTEND_ORIGIN.split(',').map(v => v.trim()).filter(Boolean) : [])
+]);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(origin && !allowedOrigins.has(origin) ? 403 : 204);
+  next();
+});
 app.use(express.json({ limit: '10mb' }));
 app.get('/api/health', async (req, res) => {
   try { await db.query('SELECT 1'); res.json({ ok: true, service: 'BizLens', database: 'connected', time: new Date().toISOString() }) }

@@ -96,8 +96,27 @@ async function route() {
 }
     if (!S.token) return (location.hash = '#/auth');
     if (!PAGES[h]) return (location.hash = '#/dashboard');
-    if (!S.user) { try { S.user = await api('/me') } catch (e) { return } }
-    shell(h)
+    if (!S.user) {
+        try {
+            S.user = await api('/me');
+        } catch (e) {
+            const app = $('#app');
+            if (app) {
+                app.innerHTML = `
+                    <main style="max-width:680px;margin:12vh auto;padding:28px;font-family:Inter,system-ui,sans-serif;color:var(--ink,#172033)">
+                        <section style="padding:28px;border:1px solid var(--line,#dbe2ee);border-radius:18px;background:var(--card,#fff)">
+                            <h1 style="margin-top:0">BizLens could not connect</h1>
+                            <p>The app could not reach its API server. Your saved data has not been changed.</p>
+                            <p style="opacity:.8;font-size:14px">If you opened BizLens on GitHub Pages, the Node.js and MySQL backend must be deployed separately and the frontend API URL must point to it.</p>
+                            <button type="button" onclick="location.hash='#/'" style="padding:11px 16px;border:0;border-radius:10px;background:#1d6bff;color:#fff;cursor:pointer">Back to home</button>
+                            <button type="button" onclick="location.reload()" style="padding:11px 16px;margin-left:8px;border:1px solid var(--line,#dbe2ee);border-radius:10px;background:transparent;color:inherit;cursor:pointer">Try again</button>
+                        </section>
+                    </main>`;
+            }
+            return;
+        }
+    }
+    await shell(h)
 }
 addEventListener('hashchange', route);
 async function shell(h) {

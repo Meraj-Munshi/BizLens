@@ -29,7 +29,7 @@ const formatDate = value => {
 };
 const API_BASE = String(window.BIZLENS_API_URL || '').trim().replace(/\/+$/, '');
 async function api(p, o = {}) {
-    const isGitHubPages = /(^|\\.)github\\.io$/i.test(location.hostname);
+    const isGitHubPages = /(^|\.)github\.io$/i.test(location.hostname);
     if (isGitHubPages && !API_BASE) {
         throw new Error('BizLens backend is not connected yet. The website is online, but the API server URL has not been configured.');
     }

@@ -140,6 +140,21 @@ BizLens/
 
 Create your own `.env` file locally. Do not commit it to Git.
 
+## Deployment notes
+
+GitHub Pages hosts only the static frontend. The Node.js API and MySQL database must be hosted separately for real account registration, login, and data storage.
+
+### Backend deployment (Render)
+
+1. Create a managed MySQL database with a provider that permits connections from your backend host.
+2. In Render, create a new Blueprint from this repository and let it read `render.yaml`.
+3. In the `bizlens-api` service environment, set `DB_HOST`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` to the database provider's connection details. Keep these secrets only in the hosting provider's environment settings.
+4. Wait for the backend deploy to finish, then open `https://YOUR-API-HOST/api/health`. A healthy service returns JSON with `"ok": true` and `"database": "connected"`.
+5. Update `frontend/config.js` so `window.BIZLENS_API_URL` is the backend origin (for example, `https://your-service.onrender.com`, with no trailing slash and no `/api`). Commit this public URL only; never place database passwords or JWT secrets in frontend files.
+6. After GitHub Pages redeploys, test signup, login, logout, and a refresh. Free backend hosting may sleep when idle.
+
+The repository cannot automatically provision a third-party MySQL account or enter private database credentials. Until a real database and backend URL are configured, signup/login will show a clear connection message instead of silently failing.
+
 ## Getting Started
 
 ### Prerequisites

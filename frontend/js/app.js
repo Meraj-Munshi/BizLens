@@ -197,7 +197,7 @@ async function shell(h) {
             <img
                 src="${esc(
         S.user?.profile_image ||
-        'assets/logo-landing.png'
+        'frontend/assets/logo-landing.png'
     )}"
                 alt="Profile">
 
@@ -220,7 +220,7 @@ async function shell(h) {
                 <img
                     src="${esc(
         S.user?.profile_image ||
-        'assets/logo-landing.png'
+        'frontend/assets/logo-landing.png'
     )}"
                     alt="Profile">
 
@@ -518,7 +518,7 @@ function landing() {
 
        <div class="logo-area">
 
-            <img src="assets/logo-landing.png"
+            <img src="frontend/assets/logo-landing.png"
                  alt="BizLens Logo">
 
         </div>
@@ -1559,7 +1559,7 @@ function landing() {
 
             <div class="logo-area">
 
-            <img src="assets/logo.png"
+            <img src="frontend/assets/logo.png"
                  alt="BizLens Logo">
 
         </div>
@@ -1855,7 +1855,7 @@ hi: {
 
                 <div class="auth-brand">
                     <img
-                        src="assets/logo-landing.png"
+                        src="frontend/assets/logo-landing.png"
                         alt="BizLens">
                 </div>
 
@@ -7057,7 +7057,7 @@ async function pSettings(el) {
                             <div class="profile-upload">
 
                                 <div class="profile-preview">
-                                <img id="profilePreview"src="${esc(S.user.profile_image || 'assets/logo-landing.png')}"
+                                <img id="profilePreview"src="${esc(S.user.profile_image || 'frontend/assets/logo-landing.png')}"
                                 alt="Business Logo">
                                 </div>
 
@@ -7763,7 +7763,7 @@ async function pSettings(el) {
             if (preview) {
                 preview.src =
                     S.user.profile_image ||
-                    'assets/logo-landing.png';
+                    'frontend/assets/logo-landing.png';
             }
 
             toast('Profile saved');

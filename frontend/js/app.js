@@ -27,9 +27,27 @@ const formatDate = value => {
 
     return `${d}/${m}/${y}`;
 };
+const API_BASE = String(window.BIZLENS_API_URL || '').trim().replace(/\/+$/, '');
 async function api(p, o = {}) {
-    const r = await fetch('/api' + p, { method: o.method || 'GET', headers: { 'Content-Type': 'application/json', ...(S.token ? { Authorization: 'Bearer ' + S.token } : {}) }, body: o.body ? JSON.stringify(o.body) : undefined });
-    const d = await r.json().catch(() => ({})); if (r.status === 401 && S.token && !p.startsWith('/auth')) { logout(); throw new Error(d.error) } if (!r.ok) throw new Error(d.error || 'Request failed'); return d
+    const isGitHubPages = /(^|\\.)github\\.io$/i.test(location.hostname);
+    if (isGitHubPages && !API_BASE) {
+        throw new Error('BizLens backend is not connected yet. The website is online, but the API server URL has not been configured.');
+    }
+    const base = API_BASE || location.origin;
+    let r;
+    try {
+        r = await fetch(base + '/api' + p, {
+            method: o.method || 'GET',
+            headers: { 'Content-Type': 'application/json', ...(S.token ? { Authorization: 'Bearer ' + S.token } : {}) },
+            body: o.body ? JSON.stringify(o.body) : undefined
+        });
+    } catch (error) {
+        throw new Error('Cannot reach the BizLens server. Check that the backend is deployed and its API URL is configured.');
+    }
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 401 && S.token && !p.startsWith('/auth')) { logout(); throw new Error(d.error || 'Your session has expired. Please log in again.'); }
+    if (!r.ok) throw new Error(d.error || ('Server request failed (' + r.status + ')'));
+    return d;
 }
 function toast(m, e) { const t = document.createElement('div'); t.textContent = m; if (e) t.className = 'e'; $('#toast').append(t); setTimeout(() => t.remove(), 3800) }
 const logout = () => { localStorage.removeItem('bl_token'); S.token = null; location.hash = '#/' };

@@ -2,10 +2,12 @@ require('dotenv').config();
 const fs = require('fs');
 const mysql = require('mysql2/promise');
 
+const dbName = process.env.DB_NAME || 'bizlens';
 const config = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
+  database: dbName,
   multipleStatements: true
 };
 
@@ -19,11 +21,11 @@ async function columnExists(c, table, column) {
 
 async function setup() {
   const c = await mysql.createConnection(config);
-  const schema = fs.readFileSync(__dirname + '/../database/schema.sql', 'utf8');
+  const schema = fs.readFileSync(__dirname + '/../database/schema.sql', 'utf8')
+    .split(/\r?\n/)
+    .filter(line => !/^\s*(CREATE DATABASE|USE\s+)/i.test(line))
+    .join('\n');
   await c.query(schema);
-
-  const dbName = process.env.DB_NAME || 'bizlens';
-  await c.query(`USE \`${dbName.replace(/`/g, '')}\``);
 
   // Backward-compatible migrations for databases created by older BizLens builds.
   if (!(await columnExists(c, 'products', 'stock'))) {

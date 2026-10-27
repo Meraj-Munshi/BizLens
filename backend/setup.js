@@ -5,10 +5,12 @@ const mysql = require('mysql2/promise');
 const dbName = process.env.DB_NAME || 'bizlens';
 const config = {
   host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: dbName,
-  multipleStatements: true
+  multipleStatements: true,
+  ...(/^(1|true|yes)$/i.test(process.env.DB_SSL || '') ? { ssl: { rejectUnauthorized: !/^(0|false|no)$/i.test(process.env.DB_SSL_REJECT_UNAUTHORIZED || '') } } : {})
 };
 
 async function columnExists(c, table, column) {

@@ -7910,7 +7910,7 @@ $('#pw').onsubmit = async e => {
         try {
 
             const r = await fetch(
-                `/api/export/${t}?format=${f}`,
+                API_BASE + `/api/export/${t}?format=${f}`,
                 {
                     headers: {
                         Authorization:

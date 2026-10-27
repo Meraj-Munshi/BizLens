@@ -30,6 +30,9 @@ async function setup() {
   await c.query(schema);
 
   // Backward-compatible migrations for databases created by older BizLens builds.
+  if (!(await columnExists(c, 'businesses', 'profile_image'))) {
+    await c.query('ALTER TABLE businesses ADD COLUMN profile_image MEDIUMTEXT NULL');
+  }
   if (!(await columnExists(c, 'products', 'stock'))) {
     await c.query(`ALTER TABLE products ADD COLUMN stock INT NOT NULL DEFAULT 0 AFTER selling_price`);
   }

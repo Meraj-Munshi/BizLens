@@ -9,10 +9,14 @@ function prepare(sql) {
  if (/^\s*INSERT\s+INTO\s+/i.test(text) && !/\bRETURNING\b/i.test(text)) text=text.replace(/;?\s*$/,' RETURNING id');
  return text;
 }
-function shape(r) { return [r.rows || [], { insertId: r.rows?.[0]?.id === undefined ? undefined : Number(r.rows[0].id), affectedRows:r.rowCount||0, rowCount:r.rowCount||0 }]; }
-async function query(sql,params=[]) { return shape(await pool.query(prepare(sql),params)); }
+function shape(sql,r) {
+ const rows=r.rows||[];
+ if (/^\s*INSERT\s+INTO\s+/i.test(sql)) return [{insertId:rows[0]?.id===undefined?undefined:Number(rows[0].id),affectedRows:r.rowCount||0},rows];
+ return [rows,{affectedRows:r.rowCount||0,rowCount:r.rowCount||0}];
+}
+async function query(sql,params=[]) { return shape(sql,await pool.query(prepare(sql),params)); }
 async function getConnection() {
  const client=await pool.connect();
- return { query:async(sql,params=[])=>shape(await client.query(prepare(sql),params)), beginTransaction:()=>client.query('BEGIN'), commit:()=>client.query('COMMIT'), rollback:()=>client.query('ROLLBACK'), release:()=>client.release() };
+ return {query:async(sql,params=[])=>shape(sql,await client.query(prepare(sql),params)),beginTransaction:()=>client.query('BEGIN'),commit:()=>client.query('COMMIT'),rollback:()=>client.query('ROLLBACK'),release:()=>client.release()};
 }
 module.exports={query,getConnection,end:()=>pool.end()};

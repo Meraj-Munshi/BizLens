@@ -50,12 +50,14 @@ async function compute(bid, q = {}) {
    WHERE o.business_id=? AND o.status<>'cancelled' AND o.order_date<=?
    GROUP BY o.id`, [bid, end]);
 
-  const [exps] = await db.query(`
+  const [expsRaw] = await db.query(`
    SELECT e.amount,e.expense_date d,c.name cat
    FROM expenses e JOIN expense_categories c ON c.id=e.category_id
    WHERE e.business_id=? AND e.expense_date BETWEEN ? AND ?`, [bid, pStart, end]);
 
-  const cur = stats(orders, exps, start, end), prev = stats(orders, exps, pStart, pEnd);
+  const exps = expsRaw.map(x => ({ ...x, amount: Number(x.amount) || 0 }));
+  const normalizedOrders = orders.map(o => ({ ...o, rev: Number(o.rev) || 0, cost: Number(o.cost) || 0 }));
+  const cur = stats(normalizedOrders, exps, start, end), prev = stats(normalizedOrders, exps, pStart, pEnd);
   const growth = {
     revenue: g(cur.revenue, prev.revenue), netProfit: g(cur.netProfit, prev.netProfit),
     orders: g(cur.orders, prev.orders), aov: g(cur.aov, prev.aov),
@@ -76,7 +78,7 @@ async function compute(bid, q = {}) {
    GROUP BY p.id,p.name,p.category`, [bid, start, end]);
 
   const products = items.map(i => ({
-    ...i, revenue: r2(i.revenue), cost: r2(i.cost),
+    ...i, units: Number(i.units) || 0, revenue: r2(i.revenue), cost: r2(i.cost),
     profit: r2(i.revenue - i.cost),
     margin: i.revenue ? r2((i.revenue - i.cost) / i.revenue * 100) : 0
   }));
@@ -103,7 +105,7 @@ async function compute(bid, q = {}) {
   // Precompute daily values so custom ranges remain complete and efficient.
   const revByDay = {}, costByDay = {}, returningByDay = {}, expByDay = {};
   const lifetime = {};
-  for (const o of orders) {
+  for (const o of normalizedOrders) {
     if (o.d <= end) lifetime[o.customer_id] = (lifetime[o.customer_id] || 0) + 1;
     if (o.d >= start && o.d <= end) {
       revByDay[o.d] = (revByDay[o.d] || 0) + o.rev;
@@ -113,7 +115,7 @@ async function compute(bid, q = {}) {
   // Customer lifetime counts must be evaluated at each day, so process chronological orders.
   const life = {};
   const dailyCustomers = {};
-  for (const o of [...orders].sort((a, b) => a.d.localeCompare(b.d))) {
+  for (const o of [...normalizedOrders].sort((a, b) => a.d.localeCompare(b.d))) {
     life[o.customer_id] = (life[o.customer_id] || 0) + 1;
     if (o.d >= start && o.d <= end) {
       const set = dailyCustomers[o.d] ??= new Set();

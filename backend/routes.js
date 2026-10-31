@@ -1132,7 +1132,7 @@ r.post('/orders', wrap(async (req, res) => {
                  FROM products
                  WHERE id=?
                    AND business_id=?
-                   AND status="active"
+                   AND status='active'
                  FOR UPDATE`,
                 [
                     productId,

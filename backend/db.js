@@ -1,28 +1,18 @@
 require('dotenv').config();
-const mysql = require('mysql2/promise');
-
-const sslEnabled = /^(1|true|yes)$/i.test(process.env.DB_SSL || '');
-const poolConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || 'bizlens',
-  dateStrings: true,
-  decimalNumbers: true,
-  waitForConnections: true,
-  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
-  queueLimit: 0,
-  ...(sslEnabled ? { ssl: { rejectUnauthorized: !/^(0|false|no)$/i.test(process.env.DB_SSL_REJECT_UNAUTHORIZED || '') } } : {})
-};
-
-if (process.env.NODE_ENV === 'production') {
-  if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-    throw new Error('Database is not configured. Set DB_HOST, DB_USER, DB_PASSWORD and DB_NAME in the hosting environment.');
-  }
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-    throw new Error('JWT_SECRET must be configured as a strong secret of at least 32 characters.');
-  }
+const { Pool } = require('pg');
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required for Neon PostgreSQL.');
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32)) throw new Error('JWT_SECRET must be at least 32 characters.');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined, max: Number(process.env.DB_CONNECTION_LIMIT) || 5, idleTimeoutMillis: 30000, connectionTimeoutMillis: 10000 });
+function prepare(sql) {
+ let i=0;
+ let text=sql.replace(/\?/g,()=>'$'+(++i));
+ if (/^\s*INSERT\s+INTO\s+/i.test(text) && !/\bRETURNING\b/i.test(text)) text=text.replace(/;?\s*$/,' RETURNING id');
+ return text;
 }
-
-module.exports = mysql.createPool(poolConfig);
+function shape(r) { return [r.rows || [], { insertId: r.rows?.[0]?.id === undefined ? undefined : Number(r.rows[0].id), affectedRows:r.rowCount||0, rowCount:r.rowCount||0 }]; }
+async function query(sql,params=[]) { return shape(await pool.query(prepare(sql),params)); }
+async function getConnection() {
+ const client=await pool.connect();
+ return { query:async(sql,params=[])=>shape(await client.query(prepare(sql),params)), beginTransaction:()=>client.query('BEGIN'), commit:()=>client.query('COMMIT'), rollback:()=>client.query('ROLLBACK'), release:()=>client.release() };
+}
+module.exports={query,getConnection,end:()=>pool.end()};

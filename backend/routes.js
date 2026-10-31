@@ -1236,11 +1236,10 @@ r.patch('/orders/:id/cancel', wrap(async (req, res) => {
         }
 
         await cx.query(
-            `UPDATE products p
-             JOIN order_items oi
-               ON oi.product_id=p.id
-             SET p.stock=p.stock+oi.quantity
-             WHERE oi.order_id=?`,
+            `UPDATE products SET stock=products.stock+order_items.quantity
+             FROM order_items
+             WHERE order_items.product_id=products.id
+               AND order_items.order_id=?`,
             [req.params.id]
         );
 

@@ -128,7 +128,7 @@ async function compute(bid, q = {}) {
     trend.push({ date: d, revenue: r2(rev), expenses: r2(ex), profit: r2(rev - cost - ex), returning: dailyCustomers[d]?.size || 0 });
   }
 
-  const [pl] = await db.query('SELECT name,stock,cost_price,selling_price FROM products WHERE business_id=? AND status="active"', [bid]);
+  const [pl] = await db.query('SELECT name,stock,cost_price,selling_price FROM products WHERE business_id=? AND status='active'', [bid]);
   const alerts = [];
   if (cur.revenue && cur.margin < 15) alerts.push({ type: 'Low margin', level: 'warn', text: `Net profit margin is ${cur.margin}%, below the 15% threshold.` });
   if (cur.revenue && cur.expenseRatio > 40) alerts.push({ type: 'High expenses', level: 'warn', text: `Expenses are ${cur.expenseRatio}% of revenue.` });

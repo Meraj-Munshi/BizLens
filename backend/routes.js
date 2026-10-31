@@ -558,11 +558,7 @@ r.get('/orders', wrap(async (req, res) => {
             c.name customer,
             o.customer_id,
 
-            GROUP_CONCAT(
-                DISTINCT p.name
-                ORDER BY p.name
-                SEPARATOR ', '
-            ) product,
+            STRING_AGG(DISTINCT p.name, ', ' ORDER BY p.name) product,
 
             COALESCE(
                 SUM(oi.selling_price*oi.quantity),
@@ -957,12 +953,7 @@ r.delete('/orders/:id', wrap(async (req, res) => {
         if (orders[0].status !== 'cancelled') {
 
             await cx.query(
-                `UPDATE products p
-                 JOIN order_items oi
-                   ON oi.product_id=p.id
-                 SET p.stock=p.stock+oi.quantity
-                 WHERE oi.order_id=?
-                   AND p.business_id=?`,
+                `UPDATE products SET stock=products.stock + order_items.quantity FROM order_items WHERE order_items.product_id=products.id AND order_items.order_id=$1 AND products.business_id=$2`,
                 [
                     req.params.id,
                     req.bid
